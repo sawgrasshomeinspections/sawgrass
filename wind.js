@@ -20,7 +20,7 @@ const FIELD_MAP = {
     "Text Field 63",
   ],
 
-  inspectionDate: "inspectionDate",
+  date: ["inspectionDate", "Text Field 59"],
 
   ownerName: ["ownerName", "Prepared for", "contactPerson"],
 
@@ -356,7 +356,7 @@ function getOrientationCorrection(orientation) {
   }
 }
 // Fills the PDF using current HTML-form values and returns a Uint8Array
-async function fill4Point() {
+async function fill4Point(shouldFlatten = false) {
   const templateBytes = await fetchPdf(WIND_MITIGATION_PDF_NAME);
   const pdfDoc = await PDFLib.PDFDocument.load(templateBytes);
   const form = pdfDoc.getForm();
@@ -376,6 +376,7 @@ async function fill4Point() {
       val ? field.check() : field.uncheck();
     } else {
       field.setText(String(val));
+      field.setFontSize(10);
     }
   };
 
@@ -394,9 +395,10 @@ async function fill4Point() {
 
   await drawImages(pdfDoc);
 
-  // TODO: Fix corrupted PDF forms
-  //const newForm = pdfDoc.getForm();
-  //newForm.flatten();
+  if (shouldFlatten) {
+    form.updateFieldAppearances();
+    form.flatten();
+  }
 
   return pdfDoc.save();
 }
@@ -533,3 +535,29 @@ document.querySelector("#download-pdf").addEventListener("click", async (e) => {
     alert("Something went wrong while creating the PDF. Please try again.");
   }
 });
+
+document
+  .querySelector("#download-pdf-flattened")
+  .addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    try {
+      // Pass 'true' to trigger the flattening logic
+      const filledBytes = await fill4Point(true);
+
+      const blob = new Blob([filledBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const ownerName = document.querySelector("#ownerName").value || "Unknown";
+
+      const a = Object.assign(document.createElement("a"), {
+        href: url,
+        download: `${ownerName} Wind Mitigation (Flattened).pdf`,
+      });
+
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      alert("Something went wrong while creating the PDF. Please try again.");
+    }
+  });

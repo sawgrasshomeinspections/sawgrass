@@ -27,7 +27,7 @@ const FIELD_MAP = {
   email: "ownerEmail",
   ownerCity: "ownerCity",
   ownerZip: "ownerZip",
-  ownerCounty: "ownerCounty",
+  ownerCounty: "ownerCountry",
   insuranceCompany: "insuranceCompany",
   insurancePolicyNumber: "insuranceCompany",
   homeYearBuilt: "yearOfHome",
